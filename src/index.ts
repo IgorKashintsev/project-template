@@ -11,8 +11,14 @@ window.addEventListener('DOMContentLoaded', () => {
   const departureDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 4).toISOString().slice(0, 10);
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 2, 0).toISOString().slice(0, 10);
 
-  
-  renderUserBlock('Wade Warren', 2)
+  // renderUserBlock('Wade Warren', avatar, 2)
+  // renderSearchFormBlock(dateNow, arrivalDay, departureDay, lastDay)
+  // renderSearchStubBlock()
+  // renderToast(
+  //     {text: 'Это пример уведомления. Используйте его при необходимости', type: 'success'},
+  //     {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+  // )
+  renderUserBlock('Wade Warren', '/img/avatar.png', 2)
   renderSearchFormBlock(dateNow, arrivalDay, departureDay, lastDay)
   renderSearchStubBlock()
   renderToast(
