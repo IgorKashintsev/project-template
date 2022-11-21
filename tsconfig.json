@@ -4,14 +4,8 @@
   "target": "es2015",
   "module": "es2015",
   "moduleResolution": "node",
-  // "typeRoots" : ["node_modules/@types", "src"]
   },
   "files": [
   "src/index.ts"
-  ],
-  "include": [
-    "src/**/*",
-    "src",
-    "src/declaration.d.ts",
   ],
 }
