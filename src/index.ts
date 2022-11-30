@@ -4,12 +4,6 @@ import { renderUserBlock } from './user.js';
 import { renderToast } from './lib.js';
 import { localStorage } from './localStorage.js'
 
-// export interface SearchFormData {
-//   inDate: unknown,
-//   outDate: unknown,
-//   maxPrice: unknown,
-// }
-
 window.addEventListener('DOMContentLoaded', () => {
   const date = new Date();
   const dateNow = new Date().toISOString().slice(0, 10);
@@ -19,12 +13,6 @@ window.addEventListener('DOMContentLoaded', () => {
     .toISOString().slice(0, 10);
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 2, 0)
     .toISOString().slice(0, 10);
-
-  // const searchData = {
-  // inDate: document.getElementById('check-in-date'),
-  // outDate: document.getElementById('check-out-date'),
-  // maxPrice: document.getElementById('max-price'),
-  // };
 
   let userName: unknown;
   let avatar: unknown;
