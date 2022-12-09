@@ -1,5 +1,33 @@
 import { renderBlock } from './lib.js';
 
+interface SearchFormData {
+  inDate: HTMLElement,
+  outDate: HTMLElement,
+  maxPrice: HTMLElement,
+}
+
+export const search = () => {
+  const searchData: SearchFormData = {
+    inDate: document.getElementById('check-in-date'),
+    outDate: document.getElementById('check-out-date'),
+    maxPrice: document.getElementById('max-price'),
+    };
+
+  const searchButton = document.getElementById('search-button')
+  searchButton.addEventListener('click', (ev) => {
+    ev.preventDefault()
+    if(searchData.inDate instanceof HTMLInputElement) {
+    console.log(searchData.inDate.value);
+    }
+    if(searchData.outDate instanceof HTMLInputElement) {
+    console.log(searchData.outDate.value);
+    }
+    if(searchData.maxPrice instanceof HTMLInputElement) {
+    console.log(searchData.maxPrice.value);
+    }
+  });
+};
+
 export function renderSearchFormBlock (dateNow: String, arrivalDay: String, departureDay: String, lastDay: String) {
   renderBlock(
     'search-form-block',
@@ -31,7 +59,7 @@ export function renderSearchFormBlock (dateNow: String, arrivalDay: String, depa
             <input id="max-price" type="text" value="" name="price" class="max-price" />
           </div>
           <div>
-            <div><button>Найти</button></div>
+            <div><button id="search-button">Найти</button></div>
           </div>
         </div>
       </fieldset>

@@ -1,6 +1,6 @@
 import { renderBlock } from './lib.js';
 
-export function renderUserBlock (name: String, avatar: String, favoriteItemsAmount: Number) {
+export function renderUserBlock (name: unknown, avatar: unknown, favoriteItemsAmount?: unknown) {
   const favoritesCaption = favoriteItemsAmount > 0 ? favoriteItemsAmount : 'ничего нет'
   const hasFavoriteItems = favoriteItemsAmount > 0 ? true : false
 
