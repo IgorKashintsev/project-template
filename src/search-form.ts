@@ -1,29 +1,82 @@
-import { renderBlock } from './lib.js';
+import { renderBlock, renderToast } from './lib.js';
+import { renderSearchResultsBlock } from './search-results.js';
+import { PlacesArr, SearchFormData } from './types';
 
-interface SearchFormData {
-  inDate: HTMLElement,
-  outDate: HTMLElement,
-  maxPrice: HTMLElement,
-}
+export const placesArr: PlacesArr[] = [];
+
+export const searchParams = {
+  dateIn: 0,
+  dateOut: 0,
+  priceMax: 0,
+};
+
+export let updated = true;
 
 export const search = () => {
   const searchData: SearchFormData = {
-    inDate: document.getElementById('check-in-date'),
-    outDate: document.getElementById('check-out-date'),
-    maxPrice: document.getElementById('max-price'),
+    inDateEl: document.getElementById('check-in-date'),
+    outDateEl: document.getElementById('check-out-date'),
+    maxPriceEl: document.getElementById('max-price') as HTMLInputElement,
     };
 
-  const searchButton = document.getElementById('search-button')
+  const coordinates = `59.9386,30.3141`;
+
+  searchData.maxPriceEl.addEventListener('change', () => {
+    if(searchData.maxPriceEl.value.match(/^[0-9]+$/)) {
+      searchData.maxPriceEl.classList.remove('error');
+    }
+  });
+
+  const searchButton = document.getElementById('search-button');
   searchButton.addEventListener('click', (ev) => {
-    ev.preventDefault()
-    if(searchData.inDate instanceof HTMLInputElement) {
-    console.log(searchData.inDate.value);
+    ev.preventDefault();
+    if(!searchData.maxPriceEl.value) {
+      searchData.maxPriceEl.classList.add('error');
+      return
     }
-    if(searchData.outDate instanceof HTMLInputElement) {
-    console.log(searchData.outDate.value);
+    if(searchData.inDateEl instanceof HTMLInputElement) {
+      searchParams.dateIn = new Date(searchData.inDateEl.value).getTime();
     }
-    if(searchData.maxPrice instanceof HTMLInputElement) {
-    console.log(searchData.maxPrice.value);
+    if(searchData.outDateEl instanceof HTMLInputElement) {
+      searchParams.dateOut = new Date(searchData.outDateEl.value).getTime();
+    }
+    if(searchData.maxPriceEl instanceof HTMLInputElement) {
+      searchParams.priceMax = +searchData.maxPriceEl.value;
+    }
+
+    if(!searchData.maxPriceEl.value.match(/^[0-9]+$/)) {
+      renderToast(
+        {text: 'В максимальную цену необходимо вводить числовое значение, без пробелов и спецсимволов', type: 'success'},
+        {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+      );
+    } else if(searchParams.dateOut <= searchParams.dateIn) {
+      renderToast(
+        {text: 'Дата выезда должна быть позже даты въезда', type: 'success'},
+        {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+      );
+    } else {
+      updated = true;
+      fetch(`http://localhost:3030/places?` +
+        `coordinates=${coordinates}&` +
+        `checkInDate=${searchParams.dateIn}&` +
+        `checkOutDate=${searchParams.dateOut}&` +
+        `maxPrice=${searchParams.priceMax}&`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          placesArr.splice(0, placesArr.length, ...data);
+          renderSearchResultsBlock(placesArr);
+          setTimeout(() => {
+            updated = false;
+            renderToast(
+              {text: 'Необходимо изменить данные поиска', type: 'success'},
+              {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+            );
+          }, 300000);
+        })
+        .catch(function(err) {
+          console.log('Fetch Error :-S', err);
+        });
     }
   });
 };

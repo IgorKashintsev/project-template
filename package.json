@@ -5,7 +5,7 @@
   "scripts": {
     "build": " rd -r public\\scripts 2>null & tsc",
     "build:dev": "rd -r public\\scripts 2>null & tsc -p tsconfig-dev.json",
-    "start": "http-server -p 3021",
+    "start": "http-server -p 3024",
     "lint": "eslint src --ext .js --ext .ts",
     "lint-fix": "eslint src --ext .js --ext .ts --fix",
     "test": "echo \"Error: no test specified\" && exit 1"

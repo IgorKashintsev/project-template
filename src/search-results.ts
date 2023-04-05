@@ -1,4 +1,7 @@
-import { renderBlock } from './lib.js';
+import { renderBlock, renderToast } from './lib.js';
+import { setFavoriteItem, localStorage } from './localStorage.js';
+import { searchParams, updated } from './search-form.js';
+import { PlacesArr } from './types';
 
 export function renderSearchStubBlock () {
   renderBlock(
@@ -24,7 +27,62 @@ export function renderEmptyOrErrorSearchBlock (reasonMessage) {
   )
 }
 
-export function renderSearchResultsBlock () {
+let favoritesActive = '';
+
+const setFavoritesActive = (itemPlacesArr: PlacesArr) => {
+  const favoritesIdx = localStorage.favoritesAmount.findIndex(el => el.id === itemPlacesArr.id);
+    if (favoritesIdx !== -1) {
+      favoritesActive = 'active';
+    } else {
+      favoritesActive = '';
+    }
+};
+
+const toggleFavoriteItem = () => {
+  let favotieItems = document.querySelectorAll('.favorites');
+  for(let item of favotieItems) {
+    item.addEventListener('click', ev => {
+      const el = ev.target;
+      if (el instanceof Element) {
+        el.classList.toggle('active');
+        setFavoriteItem(Number(el.getAttribute('id')));
+      }
+    });
+  }
+};
+
+const booking = () => {
+  const searchResultsBlock = document.getElementById('search-results-block');
+  searchResultsBlock.addEventListener('click', (ev) => {
+    let element = ev.target as HTMLElement;
+    const elId = Number(element.dataset['id']);
+    if(!updated) {
+      return
+    } else {
+      fetch(`http://localhost:3030/places/${elId}?` +
+      `checkInDate=${searchParams.dateIn}&` +
+      `checkOutDate=${searchParams.dateOut}&`,
+        {method: 'PATCH'}
+      )
+        .then((response) => response.json())
+        .then(() => {
+          renderToast(
+            {text: 'Отель успешно забронирован', type: 'success'},
+            {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+          );
+        })
+        .catch(function(err) {
+          console.log('Fetch Error :-S', err);
+          renderToast(
+            {text: 'При бронировании возникла ошибка', type: 'success'},
+            {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+          );
+        });
+    }
+  })
+}
+
+export function renderSearchResultsBlock (placesArr: PlacesArr[]) {
   renderBlock(
     'search-results-block',
     `
@@ -39,50 +97,37 @@ export function renderSearchResultsBlock () {
             </select>
         </div>
     </div>
-    <ul class="results-list">
-      <li class="result">
-        <div class="result-container">
-          <div class="result-img-container">
-            <div class="favorites active"></div>
-            <img class="result-img" src="./img/result-1.png" alt="">
-          </div>	
-          <div class="result-info">
-            <div class="result-info--header">
-              <p>YARD Residence Apart-hotel</p>
-              <p class="price">13000&#8381;</p>
-            </div>
-            <div class="result-info--map"><i class="map-icon"></i> 2.5км от вас</div>
-            <div class="result-info--descr">Комфортный апарт-отель в самом сердце Санкт-Петербрга. К услугам гостей номера с видом на город и бесплатный Wi-Fi.</div>
-            <div class="result-info--footer">
-              <div>
-                <button>Забронировать</button>
+    ${placesArr.map((item) => {
+      setFavoritesActive(item)
+      return `
+        <ul class="results-list">
+          <li class="result">
+            <div class="result-container">
+              <div class="result-img-container">
+                <div id="${item.id}" class="favorites ${favoritesActive}"></div>
+                <img class="result-img" src="${item.image}" alt="">
+              </div>	
+              <div class="result-info">
+                <div class="result-info--header">
+                  <p>${item.name}</p>
+                  <p class="price">${item.price}&#8381;</p>
+                </div>
+                <div class="result-info--map"><i class="map-icon"></i> ${item.remoteness}км от вас</div>
+                <div class="result-info--descr">${item.description}</div>
+                <div class="result-info--footer">
+                  <div>
+                    <button data-id="${item.id}">Забронировать</button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </li>
-      <li class="result">
-        <div class="result-container">
-          <div class="result-img-container">
-            <div class="favorites"></div>
-            <img class="result-img" src="./img/result-2.png" alt="">
-          </div>	
-          <div class="result-info">
-            <div class="result-info--header">
-              <p>Akyan St.Petersburg</p>
-              <p class="price">13000&#8381;</p>
-            </div>
-            <div class="result-info--map"><i class="map-icon"></i> 1.1км от вас</div>
-            <div class="result-info--descr">Отель Akyan St-Petersburg с бесплатным Wi-Fi на всей территории расположен в историческом здании Санкт-Петербурга.</div>
-            <div class="result-info--footer">
-              <div>
-                <button>Забронировать</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </li>
-    </ul>
+          </li>
+        </ul>
+      `
+      }).join('')
+    }
     `
   )
+  toggleFavoriteItem();
+  booking();
 }
