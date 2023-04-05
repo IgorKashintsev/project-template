@@ -9,6 +9,9 @@ body {
 	width: 980px;
 	margin: 0 auto;
 }
+.noActive {
+  pointer-events: none;
+}
 .header {
     border-bottom: 1px solid #828282;
     height: 80px;
@@ -76,6 +79,9 @@ input, select {
     border: 1px solid #BDBDBD;
     border-radius: 5px;
     padding: 1px 4px;
+}
+.error {
+  border: 1px solid #ff0000;
 }
 input[type="checkbox"] {
     height: 20px;
