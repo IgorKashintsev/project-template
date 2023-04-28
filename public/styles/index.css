@@ -80,9 +80,6 @@ input, select {
     border-radius: 5px;
     padding: 1px 4px;
 }
-.error {
-  border: 1px solid #ff0000;
-}
 input[type="checkbox"] {
     height: 20px;
     width: 20px;
@@ -192,6 +189,7 @@ ul.results-list {
 }
 .result-info {
     position: relative;
+    width: 100%;
 }
 .result-info--header {
     display: flex;

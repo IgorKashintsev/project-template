@@ -1,6 +1,7 @@
+import { sdk } from './flat-rent-sdk.js';
 import { renderBlock, renderToast } from './lib.js';
 import { setFavoriteItem, localStorage } from './localStorage.js';
-import { searchParams, updated } from './search-form.js';
+import { dateToUnixStamp, searchParams, updated } from './search-form.js';
 import { PlacesArr } from './types';
 
 export function renderSearchStubBlock () {
@@ -39,32 +40,37 @@ const setFavoritesActive = (itemPlacesArr: PlacesArr) => {
 };
 
 const toggleFavoriteItem = () => {
-  let favotieItems = document.querySelectorAll('.favorites');
+  let favotieItems = Array.from(document.querySelectorAll('.favorites'));
   for(let item of favotieItems) {
-    item.addEventListener('click', ev => {
+    item.addEventListener('click', (ev) => {
       const el = ev.target;
       if (el instanceof Element) {
+        let elemId =  el.getAttribute('id');
         el.classList.toggle('active');
-        setFavoriteItem(Number(el.getAttribute('id')));
+        if(isFinite(Number(elemId))) {
+          setFavoriteItem(Number(elemId));
+        } else {
+          setFavoriteItem(elemId);
+        }
       }
     });
   }
 };
 
-const booking = () => {
-  const searchResultsBlock = document.getElementById('search-results-block');
-  searchResultsBlock.addEventListener('click', (ev) => {
-    let element = ev.target as HTMLElement;
-    const elId = Number(element.dataset['id']);
-    if(!updated) {
-      return
-    } else {
-      fetch(`http://localhost:3030/places/${elId}?` +
-      `checkInDate=${searchParams.dateIn}&` +
-      `checkOutDate=${searchParams.dateOut}&`,
+const searchResultsBlock = document.getElementById('search-results-block');
+searchResultsBlock.addEventListener('click', (ev) => {
+  let element = ev.target as HTMLElement;
+  const elId = element.dataset['id'];
+  
+  if(!updated) {
+    return
+  } else if(element.tagName === 'BUTTON') {
+    if(isFinite(Number(elId))) {
+      fetch(`http://localhost:3030/places/${Number(elId)}?` +
+      `checkInDate=${dateToUnixStamp(searchParams.dateIn)}&` +
+      `checkOutDate=${dateToUnixStamp(searchParams.dateOut)}&`,
         {method: 'PATCH'}
       )
-        .then((response) => response.json())
         .then(() => {
           renderToast(
             {text: 'Отель успешно забронирован', type: 'success'},
@@ -74,13 +80,29 @@ const booking = () => {
         .catch(function(err) {
           console.log('Fetch Error :-S', err);
           renderToast(
-            {text: 'При бронировании возникла ошибка', type: 'success'},
+            {text: 'При бронировании возникла ошибка', type: 'error'},
+            {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+          );
+        });
+    } else {
+      sdk.book(elId, new Date(searchParams.dateIn), new Date(searchParams.dateOut))
+        .then((data: []) => {
+          // data.forEach((item) => console.log(new Date(item)));
+          renderToast(
+            {text: 'Отель успешно забронирован', type: 'success'},
+            {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+          );
+        })
+        .catch(function(err) {
+          console.log('Fetch Error :-S', err);
+          renderToast(
+            {text: `${err}`, type: 'error'},
             {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
           );
         });
     }
-  })
-}
+  }
+})
 
 export function renderSearchResultsBlock (placesArr: PlacesArr[]) {
   renderBlock(
@@ -112,7 +134,7 @@ export function renderSearchResultsBlock (placesArr: PlacesArr[]) {
                   <p>${item.name}</p>
                   <p class="price">${item.price}&#8381;</p>
                 </div>
-                <div class="result-info--map"><i class="map-icon"></i> ${item.remoteness}км от вас</div>
+                <div class="result-info--map"><i class="map-icon"></i> ${item.remoteness} км от вас</div>
                 <div class="result-info--descr">${item.description}</div>
                 <div class="result-info--footer">
                   <div>
@@ -129,5 +151,4 @@ export function renderSearchResultsBlock (placesArr: PlacesArr[]) {
     `
   )
   toggleFavoriteItem();
-  booking();
 }

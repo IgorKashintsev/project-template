@@ -10,10 +10,10 @@ export const localStorage: LocalStorage = {
   favoritesAmount: [{}],
 };
 
-export const setFavoriteItem = (itemId: number) => {
+export const setFavoriteItem = (itemId: number | string) => {
   const favoritesIdx = localStorage.favoritesAmount.findIndex(item => item.id === itemId);
   const favoritesObj = placesArr.find(item => item.id === itemId);
-  
+
   if(favoritesIdx === -1) {
     localStorage.favoritesAmount.push({
       id: itemId,

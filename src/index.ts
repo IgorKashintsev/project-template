@@ -1,12 +1,11 @@
 import { renderSearchFormBlock, search } from './search-form.js';
 import { renderSearchStubBlock } from './search-results.js';
 import { renderUserBlock } from './user.js';
-import { renderToast } from './lib.js';
 import { localStorage } from './localStorage.js';
 
 window.addEventListener('DOMContentLoaded', () => {
   const date = new Date();
-  const dateNow = new Date().toISOString().slice(0, 10);
+  const dateNow = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
   const arrivalDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 2)
     .toISOString().slice(0, 10);
   const departureDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 4)

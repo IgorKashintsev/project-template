@@ -1,16 +1,44 @@
+import { sdk } from './flat-rent-sdk.js';
 import { renderBlock, renderToast } from './lib.js';
 import { renderSearchResultsBlock } from './search-results.js';
-import { PlacesArr, SearchFormData } from './types';
+import { PlacesArr, SearchFormData, searchParamsObj } from './types';
 
 export const placesArr: PlacesArr[] = [];
 
-export const searchParams = {
+export const searchParams: searchParamsObj = {
   dateIn: 0,
   dateOut: 0,
   priceMax: 0,
 };
 
 export let updated = true;
+
+const updatedTimout = (time: number) => {
+  let timeOut = time * 60 * 1000;
+
+  setTimeout(() => {
+    updated = false;
+    renderToast(
+      {text: 'Необходимо обновить данные поиска', type: 'error'},
+      {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+    );
+  }, timeOut);
+};
+
+export function dateToUnixStamp(date) {
+  return date / 1000
+}
+
+let coordinates = '0.0,0.0';
+
+navigator.geolocation.getCurrentPosition((position) => {
+  const { latitude, longitude } = position.coords;
+  coordinates = latitude.toString() + ',' + longitude.toString();
+}, (error) => {
+  console.log(error)
+}, {
+  enableHighAccuracy: true
+});
 
 export const search = () => {
   const searchData: SearchFormData = {
@@ -19,67 +47,61 @@ export const search = () => {
     maxPriceEl: document.getElementById('max-price') as HTMLInputElement,
     };
 
-  const coordinates = `59.9386,30.3141`;
-
-  searchData.maxPriceEl.addEventListener('change', () => {
-    if(searchData.maxPriceEl.value.match(/^[0-9]+$/)) {
-      searchData.maxPriceEl.classList.remove('error');
-    }
-  });
-
   const searchButton = document.getElementById('search-button');
   searchButton.addEventListener('click', (ev) => {
     ev.preventDefault();
-    if(!searchData.maxPriceEl.value) {
-      searchData.maxPriceEl.classList.add('error');
-      return
-    }
     if(searchData.inDateEl instanceof HTMLInputElement) {
       searchParams.dateIn = new Date(searchData.inDateEl.value).getTime();
     }
     if(searchData.outDateEl instanceof HTMLInputElement) {
       searchParams.dateOut = new Date(searchData.outDateEl.value).getTime();
     }
-    if(searchData.maxPriceEl instanceof HTMLInputElement) {
+    if(searchData.maxPriceEl instanceof HTMLInputElement && searchData.maxPriceEl.value.length > 0) {
       searchParams.priceMax = +searchData.maxPriceEl.value;
     }
 
-    if(!searchData.maxPriceEl.value.match(/^[0-9]+$/)) {
-      renderToast(
-        {text: 'В максимальную цену необходимо вводить числовое значение, без пробелов и спецсимволов', type: 'success'},
-        {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
-      );
-    } else if(searchParams.dateOut <= searchParams.dateIn) {
-      renderToast(
-        {text: 'Дата выезда должна быть позже даты въезда', type: 'success'},
-        {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
-      );
-    } else {
-      updated = true;
-      fetch(`http://localhost:3030/places?` +
-        `coordinates=${coordinates}&` +
-        `checkInDate=${searchParams.dateIn}&` +
-        `checkOutDate=${searchParams.dateOut}&` +
-        `maxPrice=${searchParams.priceMax}&`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          placesArr.splice(0, placesArr.length, ...data);
-          renderSearchResultsBlock(placesArr);
-          setTimeout(() => {
-            updated = false;
+    updated = true;
+    fetch(`http://localhost:3030/places?` +
+      `coordinates=${coordinates}&` +
+      `checkInDate=${dateToUnixStamp(searchParams.dateIn)}&` +
+      `checkOutDate=${dateToUnixStamp(searchParams.dateOut)}&` +
+      `maxPrice=${searchParams.priceMax}&`
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        placesArr.splice(0, placesArr.length, ...data);
+      })
+      .then(() => {
+        sdk.search({
+          coordinates: coordinates,
+          checkInDate: new Date(searchParams.dateIn),
+          checkOutDate: new Date(searchParams.dateOut),
+          priceLimit: searchParams.priceMax,
+        })
+          .then((data: PlacesArr[]) => {
+            placesArr.splice(placesArr.length, 0, ...data);
+            renderSearchResultsBlock(placesArr);
+            updatedTimout(5);
+          })
+          .catch(function(err) {
+            console.log('Fetch Error :-S', err);
             renderToast(
-              {text: 'Необходимо изменить данные поиска', type: 'success'},
+              {text: `${err}`, type: 'error'},
               {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
             );
-          }, 300000);
-        })
-        .catch(function(err) {
-          console.log('Fetch Error :-S', err);
-        });
-    }
+          });
+      })
+      .catch(function(err) {
+        console.log('Fetch Error :-S', err);
+        renderToast(
+          {text: `${err}`, type: 'error'},
+          {name: 'Понял', handler: () => {console.log('Уведомление закрыто')}}
+        );
+      });
   });
 };
+
+// localStorage.clear();
 
 export function renderSearchFormBlock (dateNow: String, arrivalDay: String, departureDay: String, lastDay: String) {
   renderBlock(

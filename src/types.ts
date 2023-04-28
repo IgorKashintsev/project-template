@@ -4,11 +4,18 @@ export interface SearchFormData {
   maxPriceEl: HTMLInputElement;
 }
 
+export interface searchParamsObj {
+  dateIn: number;
+  dateOut: number;
+  priceMax: number;
+};
+
 export interface PlacesArr {
-  id: number;
+  id: number | string;
   image: string;
   name: string;
   description: string;
+  coordinates: number[];
   remoteness: number;
   bookedDates: number[];
   price: number;
@@ -21,7 +28,7 @@ export interface LocalStorage  {
   },
   favoritesAmount: [
     {
-      id?: number;
+      id?: number | string;
       name?: string;
       image?: string;
     }
